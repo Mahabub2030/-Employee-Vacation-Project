@@ -1,261 +1,643 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Vacation</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-</head>
-<body class="bg-gray-100">
-  <div class="container mx-auto p-5">
-    <h1 class="text-2xl font-bold mb-4">Vacation</h1>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vacation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  </head>
+  <body class="bg-gray-100">
+    <div class="container mx-auto p-5">
+      <h1 class="text-2xl font-bold mb-4">Vacation</h1>
 
-    <!-- Filter, Search, Entries, Download -->
-    <div class="mb-4 grid lg:grid-cols-4 md:grid-cols-2 sm:grid-cols-1 gap-2">
-      <div class="flex items-center gap-2">
-        <label for="monthFilter">Filter by Month:</label>
-        <select id="monthFilter" class="border border-gray-300 p-1">
-          <option value="All">All</option>
-        </select>
+      <!-- Filter, Search, Entries, Download -->
+      <div class="mb-4 grid lg:grid-cols-4 md:grid-cols-2 sm:grid-cols-1 gap-2">
+        <div class="flex items-center gap-2">
+          <label for="monthFilter">Filter by Month:</label>
+          <select id="monthFilter" class="border border-gray-300 p-1">
+            <option value="All">All</option>
+          </select>
+        </div>
+
+        <div class="flex gap-2 items-center">
+          <label for="entriesSelect">Show</label>
+          <select id="entriesSelect" class="border border-gray-300 p-1">
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+          <span>entries</span>
+        </div>
+
+        <div>
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Search by name or job..."
+            class="border border-gray-300 p-2 w-full"
+          />
+        </div>
+
+        <div class="flex gap-2">
+          <button
+            onclick="downloadPDF()"
+            class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full"
+          >
+            Download PDF
+          </button>
+          <button
+            onclick="downloadExcel()"
+            class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 w-full"
+          >
+            Download Excel
+          </button>
+          <button
+            onclick="window.print()"
+            class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 w-full"
+          >
+            Print
+          </button>
+        </div>
       </div>
 
-      <div class="flex gap-2 items-center">
-        <label for="entriesSelect">Show</label>
-        <select id="entriesSelect" class="border border-gray-300 p-1">
-          <option value="10">10</option>
-          <option value="25">25</option>
-          <option value="50">50</option>
-          <option value="100">100</option>
-        </select>
-        <span>entries</span>
+      <!-- Table -->
+      <div
+        class="overflow-x-auto bg-white shadow-md rounded-lg"
+        id="tableSection"
+      >
+        <table class="min-w-full" id="vacationTable">
+          <thead class="bg-gray-200 text-gray-600 text-sm">
+            <tr>
+              <th class="border px-4 py-2">S.N</th>
+              <th class="border px-4 py-2">Name</th>
+              <th class="border px-4 py-2">Job Description</th>
+              <th class="border px-4 py-2">Iqama No / ID</th>
+              <th class="border px-4 py-2">SAP-ID</th>
+              <th class="border px-4 py-2">Group</th>
+              <th class="border px-4 py-2">Submission Date</th>
+              <th class="border px-4 py-2">Month of Vacation</th>
+              <th class="border px-4 py-2">Type of Vacation</th>
+              <th class="border px-4 py-2">Total Vacation</th>
+              <th class="border px-4 py-2">Status</th>
+              <th class="border px-4 py-2">Return Date</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <!-- Rows will be injected -->
+          </tbody>
+        </table>
       </div>
 
-      <div>
-        <input
-          type="text"
-          id="searchInput"
-          placeholder="Search by name or job..."
-          class="border border-gray-300 p-2 w-full"
-        />
+      <!-- Pagination -->
+      <div class="flex justify-between items-center mt-4">
+        <div class="text-sm" id="entryInfo"></div>
+        <div class="flex gap-1" id="paginationControls"></div>
       </div>
-
-      <div class="flex gap-2">
-        <button
-          onclick="downloadPDF()"
-          class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full"
-        >
-          Download PDF
-        </button>
-        <button
-          onclick="downloadExcel()"
-          class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 w-full"
-        >
-          Download Excel
-        </button>
-        <button
-          onclick="window.print()"
-          class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 w-full"
-        >
-          Print
-        </button>
-      </div>
-      
     </div>
 
-    <!-- Table -->
-    <div class="overflow-x-auto bg-white shadow-md rounded-lg" id="tableSection">
-      <table class="min-w-full" id="vacationTable">
-        <thead class="bg-gray-200 text-gray-600">
-          <tr>
-            <th class="border px-4 py-2">Name</th>
-            <th class="border px-4 py-2">Job Description</th>
-            <th class="border px-4 py-2">Iqama No / ID</th>
-            <th class="border px-4 py-2">Group</th>
-            <th class="border px-4 py-2">Submission Date</th>
-            <th class="border px-4 py-2">Month of Vacation</th>
-            <th class="border px-4 py-2">Type of Vacation</th>
-            <th class="border px-4 py-2">Total Vacation</th>
-            <th class="border px-4 py-2">Status</th>
-            <th class="border px-4 py-2">Return Date</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody">
-          <!-- Rows will be injected -->
-        </tbody>
-      </table>
-    </div>
+    <script>
+      const jsonData = [
+        {
+          name: "RASEEL  MIAH  ABDUL",
+          job: "Driver",
+          iqama: "2460096924",
+          Sap_Id: "401783",
+          group: "Control  Tower",
+          submissionDate: "2025-01-00",
+          vacationMonth: "April",
+          type: "Normal",
+          total: "90 Days",
+          status: "vacation",
+          returnDate: "-",
+        },
+        {
+          name: "Adil  Mohammed  Habib",
+          job: "Driver",
+          iqama: "2526223470",
+          Sap_Id: "408776",
+          group: "STREETLIGHT",
+          submissionDate: "2025-01-01",
+          vacationMonth: "April",
+          type: "Normal",
+          total: "60 Days",
+          status: "vacation",
+          returnDate: "-",
+        },
+        {
+          name: "Khalid  Mohammad",
+          job: "Labour",
+          iqama: "2519602847",
+          Sap_Id: "407589",
+          group: "FENCE,ROAD,DRAIN",
+          submissionDate: "2025-02-01",
+          vacationMonth: "April",
+          type: "Normal",
+          total: "60 Days",
+          status: "vacation",
+          returnDate: "-",
+        },
+        {
+          name: "ABDUL  JABBAR",
+          job: "Foreman",
+          iqama: "2381603584",
+          Sap_Id: "405395",
+          group: "FENCE,ROAD,DRAIN",
+          submissionDate: "2025-02-01",
+          vacationMonth: "April",
+          type: "Normal",
+          total: "60 Days",
+          status: "vacation",
+          returnDate: "-",
+        },
+        {
+          name: "Hanif  Malo  Miah",
+          job: "Labour",
+          iqama: "2499608475",
+          Sap_Id: "407646",
+          group: "PARKING  GARAGE",
+          submissionDate: "2025-02-01",
+          vacationMonth: "April",
+          type: "Normal",
+          total: "60 Days",
+          status: "vacation",
+          returnDate: "-",
+        },
+        {
+          name: "Mohammad  Abu  Kaowsar",
+          job: "Labour",
+          iqama: "2500046996",
+          Sap_Id: "408140",
+          group: "IRRIGATION-TERMINAL-1",
+          submissionDate: "2025-02-01",
+          vacationMonth: "April",
+          type: "Normal",
+          total: "90 Days",
+          status: "vacation",
+          returnDate: "-",
+        },
+        {
+          name: "Omar  Mokhtar  Elsayed",
+          job: "PR",
+          iqama: "2521319794",
+          Sap_Id: "407217",
+          group: "MANAGEMENT",
+          submissionDate: "2025-02-03",
+          vacationMonth: "May",
+          type: "Normal",
+          total: "30 Days",
+          status: "on-job",
+          returnDate: "28-05-2025",
+        },
+        {
+          name: "FIROZ  ALAM  MOFIZ",
+          job: "PR",
+          iqama: "2495870822",
+          Sap_Id: "405444",
+          group: "Nursery",
+          submissionDate: "2025-02-03",
+          vacationMonth: "May",
+          type: "Normal",
+          total: "60 Days",
+          status: "vacation",
+          returnDate: "-",
+        },
+        {
+          name: "FIROZ  ALAM  MOFIZ",
+          job: "labour",
+          iqama: "2495870822",
+          Sap_Id: "405444",
+          group: "Nursery",
+          submissionDate: "2025-02-03",
+          vacationMonth: "May",
+          type: "Normal",
+          total: "60 Days",
+          status: "vacation",
+          returnDate: "-",
+        },
+        {
+          name: "MD  FARUK  MIAH",
+          job: "Labour",
+          iqama: "2495723666",
+          Sap_Id: "405488",
+          group: "Nursery",
+          submissionDate: "2025-02-03",
+          vacationMonth: "May",
+          type: "Normal",
+          total: "90 Days",
+          status: "vacation",
+          returnDate: "-",
+        },
+        {
+          name: "Shams  Ul  Arifeen",
+          job: "Labour",
+          iqama: "2523747224",
+          Sap_Id: "407813",
+          group: "PARKING  GARAGE",
+          submissionDate: "2025-02-03",
+          vacationMonth: "May",
+          type: "Normal",
+          total: "60 Days",
+          status: "vacation",
+          returnDate: "-",
+        },
+        {
+          name: "Imamul",
+          job: "Labour",
+          iqama: "2508426612",
+          Sap_Id: "407436",
+          group: "Nursery",
+          submissionDate: "2025-02-03",
+          vacationMonth: "May",
+          type: "Normal",
+          total: "90 Days",
+          status: "vacation",
+          returnDate: "-",
+        },
+        {
+          name: "Reda Abdelmaged Mohammad Ibrahim",
+          job: "Chif",
+          iqama: "2503732816",
+          Sap_Id: "405972",
+          group: "lanscipin/irrigation",
+          submissionDate: "2025-05-05",
+          vacationMonth: "May",
+          type: "Emergency",
+          total: "30 Days",
+          status: "on-Job",
+          returnDate: "09-5-2025",
+        },
+        {
+          name: "MANNAN PRODHAN",
+          job: "Labour",
+          iqama: "2495724227",
+          Sap_Id: "405511",
+          group: "Irrigation",
+          submissionDate: "2025-05-05",
+          vacationMonth: "May",
+          type: "Emergency",
+          total: "45 Days",
+          status: "Vacation",
+          returnDate: "-",
+        },
+        {
+          name: "Shafiqui Houssin",
+          job: "Horticulturist",
+          iqama: "2184317804",
+          Sap_Id: "414497",
+          group: "Inside Terminal",
+          submissionDate: "2025-05-05",
+          vacationMonth: "May",
+          type: "Emergency",
+          total: "35 Days",
+          status: "Vacation",
+          returnDate: "-",
+        },
+        {
+          name: "MD Sohag",
+          job: "Plumber",
+          iqama: "2523266126",
+          Sap_Id: "407412",
+          group: "IRRIGATION-TERMINAL",
+          submissionDate: "2025-05-05",
+          vacationMonth: "August",
+          type: "Normal",
+          total: "90 Days",
+          status: "pending",
+          returnDate: "-",
+        },
+        {
+          name: "AKBAR ALI",
+          job: "Labour",
+          iqama: "2519461897",
+          Sap_Id: "407811",
+          group: "FENCE,ROAD,DRAIN( A.Jabbar)",
+          submissionDate: "2025-06-05",
+          vacationMonth: "August",
+          type: "Normal",
+          total: "90 Days",
+          status: "pending",
+          returnDate: "-",
+        },
+        {
+          name: "Abdullah",
+          job: "Labour",
+          iqama: "2515012033",
+          Sap_Id: "410335",
+          group: "FENCE,ROAD,DRAIN( A.Jabbar)",
+          submissionDate: "2025-06-05",
+          vacationMonth: "August",
+          type: "Normal",
+          total: "90 Days",
+          status: "pending",
+          returnDate: "-",
+        },
+        {
+          name: "Liaqat Ali",
+          job: "Labour",
+          iqama: "2515011902",
+          Sap_Id: "410334",
+          group: "FENCE,ROAD,DRAIN( A.Jabbar)",
+          submissionDate: "2025-06-05",
+          vacationMonth: "August",
+          type: "Normal",
+          total: "90 Days",
+          status: "pending",
+          returnDate: "-",
+        },
+        {
+          name: "Antonio Enario",
+          job: "Suparvisor",
+          iqama: "2393912742",
+          Sap_Id: "405406",
+          group: "Nursery",
+          submissionDate: "2025-07-05",
+          vacationMonth: "September",
+          type: "Normal",
+          total: "60 Days",
+          status: "pending",
+          returnDate: "-",
+        },
+        {
+          name: "Saeed Ahmed Hkohar",
+          job: "Foreman",
+          iqama: "2364018263",
+          Sap_Id: "401797",
+          group: "Camp -Security",
+          submissionDate: "2025-07-05",
+          vacationMonth: "September",
+          type: "Normal",
+          total: "60 Days",
+          status: "pending",
+          returnDate: "-",
+        },
+        {
+          name: "MASUD IBRAHIM",
+          job: "Labour",
+          iqama: "2510896356",
+          Sap_Id: "407522",
+          group: "FENCE,ROAD,DRAIN(Ahmed)",
+          submissionDate: "2025-07-05",
+          vacationMonth: "September",
+          type: "Normal",
+          total: "90 Days",
+          status: "pending",
+          returnDate: "-",
+        },
+        {
+          name: "MOHAMMAD FARUQ AHMED",
+          job: "Labour",
+          iqama: "2515192462",
+          Sap_Id: "407473",
+          group: "FENCE,ROAD,DRAIN(Ali)",
+          submissionDate: "2025-07-05",
+          vacationMonth: "September",
+          type: "Normal",
+          total: "60 Days",
+          status: "pending",
+          returnDate: "-",
+        },
+        {
+          name: "MD ARIFUL ISALM",
+          job: "Labour",
+          iqama: "2511128486",
+          Sap_Id: "407471",
+          group: "WORKSHOP-IP",
+          submissionDate: "2025-07-05",
+          vacationMonth: "September",
+          type: "Normal",
+          total: "60 Days",
+          status: "pending",
+          returnDate: "-",
+        },
+        {
+          name: "RANA ABDUL GAFUR",
+          job: "Labour",
+          iqama: "2518057126",
+          Sap_Id: "407450",
+          group: "WORKSHOP-IP",
+          submissionDate: "2025-07-05",
+          vacationMonth: "September",
+          type: "Normal",
+          total: "60 Days",
+          status: "pending",
+          returnDate: "-",
+        },
+        {
+          name: "ABUL KALAM",
+          job: "Labour",
+          iqama: "2509143570",
+          Sap_Id: "407468",
+          group: "Camp -Security",
+          submissionDate: "2025-05-05",
+          vacationMonth: "September",
+          type: "Normal",
+          total: "60 Days",
+          status: "pending",
+          returnDate: "-",
+        },
+        {
+          name: "Amir Hosen",
+          job: "Labour",
+          iqama: "2500010034",
+          Sap_Id: "408139",
+          group: "Nursery",
+          submissionDate: "2025-07-05",
+          vacationMonth: "September",
+          type: "Normal",
+          total: "60 Days",
+          status: "pending",
+          returnDate: "-",
+        },
+        {
+          name: "MD MOSTAFA KAMAL",
+          job: "Labour",
+          iqama: "2515581342",
+          Sap_Id: "407649",
+          group: "FENCE,ROAD,DRAIN(Ahemd) ",
+          submissionDate: "2025-07-05",
+          vacationMonth: "September",
+          type: "Normal",
+          total: "60 Days",
+          status: "pending",
+          returnDate: "-",
+        },
+        {
+          name: "Ashraf Ahmed Abdulhadi",
+          job: "Project Coordinator	",
+          iqama: "2420562395",
+          Sap_Id: "405721",
+          group: "MANAGMENT",
+          submissionDate: "2025-05-05",
+          vacationMonth: "September",
+          type: "Normal",
+          total: "44 Days",
+          status: "pending",
+          returnDate: "-",
+        },
+        // Add more rows for testing
+      ];
 
-    <!-- Pagination -->
-    <div class="flex justify-between items-center mt-4">
-      <div class="text-sm" id="entryInfo"></div>
-      <div class="flex gap-1" id="paginationControls"></div>
-    </div>
-  </div>
+      const tableBody = document.getElementById("tableBody");
+      const monthFilter = document.getElementById("monthFilter");
+      const searchInput = document.getElementById("searchInput");
+      const entriesSelect = document.getElementById("entriesSelect");
+      const entryInfo = document.getElementById("entryInfo");
+      const paginationControls = document.getElementById("paginationControls");
 
-  <script>
-    const jsonData = [
-      {
-        name: "Mahabub",
-        job: "Project Manager",
-        iqama: "1213",
-        group: "Management",
-        submissionDate: "2025-06-05",
-        vacationMonth: "June",
-        type: "Normal",
-        total: "60 Days",
-        status: "Pending",
-        returnDate: "2025-08-05"
-      },
-      {
-        name: "Mahabub",
-        job: "Project Manager",
-        iqama: "1213",
-        group: "Management",
-        submissionDate: "2025-06-05",
-        vacationMonth: "June",
-        type: "Normal",
-        total: "60 Days",
-        status: "Approved",
-        returnDate: "2025-08-05"
-      },
-      {
-        name: "Rakib",
-        job: "Software Engineer",
-        iqama: "4567",
-        group: "IT",
-        submissionDate: "2025-03-10",
-        vacationMonth: "March",
-        type: "Emergency",
-        total: "30 Days",
-        status: "Rectecd",
-        returnDate: "2025-04-10"
-      },
-      // Add more rows for testing
-    ];
+      let currentPage = 1;
+      let filteredData = [...jsonData];
 
-    const tableBody = document.getElementById("tableBody");
-    const monthFilter = document.getElementById("monthFilter");
-    const searchInput = document.getElementById("searchInput");
-    const entriesSelect = document.getElementById("entriesSelect");
-    const entryInfo = document.getElementById("entryInfo");
-    const paginationControls = document.getElementById("paginationControls");
+      // Populate Month Filter
+      const uniqueMonths = [
+        ...new Set(jsonData.map((item) => item.vacationMonth)),
+      ];
+      uniqueMonths.forEach((month) => {
+        const option = document.createElement("option");
+        option.value = month;
+        option.textContent = month;
+        monthFilter.appendChild(option);
+      });
 
-    let currentPage = 1;
-    let filteredData = [...jsonData];
+      function renderTable() {
+        const entriesPerPage = parseInt(entriesSelect.value);
+        const start = (currentPage - 1) * entriesPerPage;
+        const end = start + entriesPerPage;
 
-    // Populate Month Filter
-    const uniqueMonths = [...new Set(jsonData.map(item => item.vacationMonth))];
-    uniqueMonths.forEach(month => {
-      const option = document.createElement("option");
-      option.value = month;
-      option.textContent = month;
-      monthFilter.appendChild(option);
-    });
+        const paginatedData = filteredData.slice(start, end);
+        tableBody.innerHTML = "";
 
-    function renderTable() {
-      const entriesPerPage = parseInt(entriesSelect.value);
-      const start = (currentPage - 1) * entriesPerPage;
-      const end = start + entriesPerPage;
+        paginatedData.forEach((item, index) => {
+          const row = document.createElement("tr");
+          const statusClass =
+            item.status.toLowerCase() === "approved"
+              ? "bg-green-600 text-white"
+              : item.status.toLowerCase() === "rejected"
+              ? "bg-red-500 text-white"
+              : item.status.toLowerCase() === "on-job"
+              ? "bg-blue-600 text-white"
+              : item.status.toLowerCase() === "vacation"
+              ? "bg-purple-600 text-white"
+              : item.status.toLowerCase() === "pending"
+              ? "bg-yellow-400 text-gray"
+              : "bg-gray-300";
 
-      const paginatedData = filteredData.slice(start, end);
-      tableBody.innerHTML = "";
+          //   const statusClass =
+          //     item.status.toLowerCase() === "approved"
+          //       ? "bg-green-600 text-white"
+          //       : item.status.toLowerCase() === "rejected"
+          //       ? "bg-red-500 text-white"
+          //       : "bg-yellow-400";
 
-      paginatedData.forEach(item => {
-        const row = document.createElement("tr");
-        const statusClass = item.status.toLowerCase() === "approved"
-          ? "bg-green-600 text-white"
-          : "bg-yellow-400";
-
-        row.innerHTML = `
-          <td class="border px-4 py-2">${item.name}</td>
-          <td class="border px-4 py-2">${item.job}</td>
-          <td class="border px-4 py-2">${item.iqama}</td>
-          <td class="border px-4 py-2">${item.group}</td>
-          <td class="border px-4 py-2">${item.submissionDate}</td>
-          <td class="border px-4 py-2">${item.vacationMonth}</td>
-          <td class="border px-4 py-2">${item.type}</td>
-          <td class="border px-4 py-2">${item.total}</td>
-          <td class="border px-4 py-2 ${statusClass}">${item.status}</td>
-          <td class="border px-4 py-2">${item.returnDate}</td>
+          row.innerHTML = `
+          <td class="border px-4 py-2 text-sm">${index + 1}</td>
+        <td class="border px-4 py-2 text-sm ">${item.name}</td>
+          <td class="border px-4 py-2 text-sm colspan="4">${item.job}</td>
+          <td class="border px-4 py-2 text-sm">${item.iqama}</td>
+          <td class="border px-4 py-2 text-sm">${item.Sap_Id}</td>
+          <td class="border px-4 py-2 text-sm colspan="2">${item.group}</td>
+          <td class="border px-4 py-2 text-sm">${item.submissionDate}</td>
+          <td class="border px-4 py-2 text-sm">${item.vacationMonth}</td>
+          <td class="border px-4 py-2 text-sm ${
+            item.type === "Emergency"
+              ? "bg-red-500 text-white"
+              : "bg-green-500 text-white"
+          }">
+  ${item.type}
+</td>
+          <td class="border px-4 py-2 text-sm">${item.total}</td>
+          <td class="border px-4 py-2 text-sm ${statusClass}">${
+            item.status
+          }</td>
+          <td class="border px-4 py-2 text-sm">${item.returnDate}</td>
         `;
-        tableBody.appendChild(row);
-      });
-
-      entryInfo.textContent = `Showing ${start + 1} to ${Math.min(end, filteredData.length)} of ${filteredData.length} entries`;
-      renderPagination();
-    }
-
-    function renderPagination() {
-      paginationControls.innerHTML = "";
-      const entriesPerPage = parseInt(entriesSelect.value);
-      const totalPages = Math.ceil(filteredData.length / entriesPerPage);
-
-      const createBtn = (text, disabled, page) => {
-        const btn = document.createElement("button");
-        btn.textContent = text;
-        btn.className = `px-3 py-1 border ${disabled ? 'bg-gray-200 text-gray-500' : 'hover:bg-gray-300'} rounded`;
-        btn.disabled = disabled;
-        btn.addEventListener("click", () => {
-          currentPage = page;
-          renderTable();
+          tableBody.appendChild(row);
         });
-        return btn;
-      };
 
-      paginationControls.appendChild(createBtn("Previous", currentPage === 1, currentPage - 1));
-      for (let i = 1; i <= totalPages; i++) {
-        const btn = createBtn(i, false, i);
-        if (i === currentPage) btn.classList.add("bg-blue-500", "text-white");
-        paginationControls.appendChild(btn);
+        entryInfo.textContent = `Showing ${start + 1} to ${Math.min(
+          end,
+          filteredData.length
+        )} of ${filteredData.length} entries`;
+        renderPagination();
       }
-      paginationControls.appendChild(createBtn("Next", currentPage === totalPages, currentPage + 1));
-    }
 
-    function filterData() {
-      const month = monthFilter.value;
-      const search = searchInput.value.toLowerCase();
+      function renderPagination() {
+        paginationControls.innerHTML = "";
+        const entriesPerPage = parseInt(entriesSelect.value);
+        const totalPages = Math.ceil(filteredData.length / entriesPerPage);
 
-      filteredData = jsonData.filter(item => {
-        const matchesMonth = month === "All" || item.vacationMonth === month;
-        const matchesSearch =
-          item.name.toLowerCase().includes(search) ||
-          item.job.toLowerCase().includes(search);
-        return matchesMonth && matchesSearch;
+        const createBtn = (text, disabled, page) => {
+          const btn = document.createElement("button");
+          btn.textContent = text;
+          btn.className = `px-3 py-1 border ${
+            disabled ? "bg-gray-200 text-gray-500" : "hover:bg-gray-300"
+          } rounded`;
+          btn.disabled = disabled;
+          btn.addEventListener("click", () => {
+            currentPage = page;
+            renderTable();
+          });
+          return btn;
+        };
+
+        paginationControls.appendChild(
+          createBtn("Previous", currentPage === 1, currentPage - 1)
+        );
+        for (let i = 1; i <= totalPages; i++) {
+          const btn = createBtn(i, false, i);
+          if (i === currentPage) btn.classList.add("bg-blue-500", "text-white");
+          paginationControls.appendChild(btn);
+        }
+        paginationControls.appendChild(
+          createBtn("Next", currentPage === totalPages, currentPage + 1)
+        );
+      }
+
+      function filterData() {
+        const month = monthFilter.value;
+        const search = searchInput.value.toLowerCase();
+
+        filteredData = jsonData.filter((item) => {
+          const matchesMonth = month === "All" || item.vacationMonth === month;
+          const matchesSearch =
+            item.name.toLowerCase().includes(search) ||
+            item.job.toLowerCase().includes(search);
+          return matchesMonth && matchesSearch;
+        });
+
+        currentPage = 1;
+        renderTable();
+      }
+
+      function downloadPDF() {
+        const element = document.getElementById("tableSection");
+        const opt = {
+          margin: 0.5,
+          filename: "Vacation_Report.pdf",
+          image: { type: "jpeg", quality: 0.98 },
+          html2canvas: { scale: 2 },
+          jsPDF: { unit: "in", format: "a4", orientation: "landscape" },
+        };
+        html2pdf().set(opt).from(element).save();
+      }
+      function downloadExcel() {
+        const table = document.getElementById("vacationTable");
+        const wb = XLSX.utils.table_to_book(table, { sheet: "Vacation Data" });
+        XLSX.writeFile(wb, "Vacation_Report.xlsx");
+      }
+
+      // Event Listeners
+      monthFilter.addEventListener("change", filterData);
+      searchInput.addEventListener("input", filterData);
+      entriesSelect.addEventListener("change", () => {
+        currentPage = 1;
+        renderTable();
       });
 
-      currentPage = 1;
-      renderTable();
-    }
-
-    function downloadPDF() {
-      const element = document.getElementById("tableSection");
-      const opt = {
-        margin: 0.5,
-        filename: 'Vacation_Report.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
-      };
-      html2pdf().set(opt).from(element).save();
-    }
-    function downloadExcel() {
-    const table = document.getElementById("vacationTable");
-    const wb = XLSX.utils.table_to_book(table, { sheet: "Vacation Data" });
-    XLSX.writeFile(wb, "Vacation_Report.xlsx");
-  }
-
-    // Event Listeners
-    monthFilter.addEventListener("change", filterData);
-    searchInput.addEventListener("input", filterData);
-    entriesSelect.addEventListener("change", () => {
-      currentPage = 1;
-      renderTable();
-    });
-
-    // Initial Render
-    filterData();
-  </script>
-</body>
+      // Initial Render
+      filterData();
+    </script>
+  </body>
 </html>

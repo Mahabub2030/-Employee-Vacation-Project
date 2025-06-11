@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vacation</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body class="bg-gray-100">
+  <div class="container mx-auto p-5">
+    <h1 class="text-2xl font-bold mb-4">Vacation</h1>
+
+    <!-- Filter, Search, Entries, Download -->
+    <div class="mb-4 grid lg:grid-cols-4 md:grid-cols-2 sm:grid-cols-1 gap-2">
+      <div class="flex items-center gap-2">
+        <label for="monthFilter">Filter by Month:</label>
+        <select id="monthFilter" class="border border-gray-300 p-1">
+          <option value="All">All</option>
+        </select>
+      </div>
+
+      <div class="flex gap-2 items-center">
+        <label for="entriesSelect">Show</label>
+        <select id="entriesSelect" class="border border-gray-300 p-1">
+          <option value="10">10</option>
+          <option value="25">25</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+        </select>
+        <span>entries</span>
+      </div>
+
+      <div>
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Search by name or job..."
+          class="border border-gray-300 p-2 w-full"
+        />
+      </div>
+
+      <div class="flex gap-2">
+        <button
+          onclick="downloadPDF()"
+          class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full"
+        >
+          Download PDF
+        </button>
+        <button
+          onclick="downloadExcel()"
+          class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 w-full"
+        >
+          Download Excel
+        </button>
+        <button
+          onclick="window.print()"
+          class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 w-full"
+        >
+          Print
+        </button>
+      </div>
+      
+    </div>
+
+    <!-- Table -->
+    <div class="overflow-x-auto bg-white shadow-md rounded-lg" id="tableSection">
+      <table class="min-w-full" id="vacationTable">
+        <thead class="bg-gray-200 text-gray-600">
+          <tr>
+            <th class="border px-4 py-2">Name</th>
+            <th class="border px-4 py-2">Job Description</th>
+            <th class="border px-4 py-2">Iqama No / ID</th>
+            <th class="border px-4 py-2">Group</th>
+            <th class="border px-4 py-2">Submission Date</th>
+            <th class="border px-4 py-2">Month of Vacation</th>
+            <th class="border px-4 py-2">Type of Vacation</th>
+            <th class="border px-4 py-2">Total Vacation</th>
+            <th class="border px-4 py-2">Status</th>
+            <th class="border px-4 py-2">Return Date</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <!-- Rows will be injected -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="flex justify-between items-center mt-4">
+      <div class="text-sm" id="entryInfo"></div>
+      <div class="flex gap-1" id="paginationControls"></div>
+    </div>
+  </div>
+
+  <script>
+    const jsonData = [
+      {
+        name: "Mahabub",
+        job: "Project Manager",
+        iqama: "1213",
+        group: "Management",
+        submissionDate: "2025-06-05",
+        vacationMonth: "June",
+        type: "Normal",
+        total: "60 Days",
+        status: "Pending",
+        returnDate: "2025-08-05"
+      },
+      {
+        name: "Mahabub",
+        job: "Project Manager",
+        iqama: "1213",
+        group: "Management",
+        submissionDate: "2025-06-05",
+        vacationMonth: "June",
+        type: "Normal",
+        total: "60 Days",
+        status: "Approved",
+        returnDate: "2025-08-05"
+      },
+      {
+        name: "Rakib",
+        job: "Software Engineer",
+        iqama: "4567",
+        group: "IT",
+        submissionDate: "2025-03-10",
+        vacationMonth: "March",
+        type: "Emergency",
+        total: "30 Days",
+        status: "Rectecd",
+        returnDate: "2025-04-10"
+      },
+      // Add more rows for testing
+    ];
+
+    const tableBody = document.getElementById("tableBody");
+    const monthFilter = document.getElementById("monthFilter");
+    const searchInput = document.getElementById("searchInput");
+    const entriesSelect = document.getElementById("entriesSelect");
+    const entryInfo = document.getElementById("entryInfo");
+    const paginationControls = document.getElementById("paginationControls");
+
+    let currentPage = 1;
+    let filteredData = [...jsonData];
+
+    // Populate Month Filter
+    const uniqueMonths = [...new Set(jsonData.map(item => item.vacationMonth))];
+    uniqueMonths.forEach(month => {
+      const option = document.createElement("option");
+      option.value = month;
+      option.textContent = month;
+      monthFilter.appendChild(option);
+    });
+
+    function renderTable() {
+      const entriesPerPage = parseInt(entriesSelect.value);
+      const start = (currentPage - 1) * entriesPerPage;
+      const end = start + entriesPerPage;
+
+      const paginatedData = filteredData.slice(start, end);
+      tableBody.innerHTML = "";
+
+      paginatedData.forEach(item => {
+        const row = document.createElement("tr");
+        const statusClass = item.status.toLowerCase() === "approved"
+          ? "bg-green-600 text-white"
+          : "bg-yellow-400";
+
+        row.innerHTML = `
+          <td class="border px-4 py-2">${item.name}</td>
+          <td class="border px-4 py-2">${item.job}</td>
+          <td class="border px-4 py-2">${item.iqama}</td>
+          <td class="border px-4 py-2">${item.group}</td>
+          <td class="border px-4 py-2">${item.submissionDate}</td>
+          <td class="border px-4 py-2">${item.vacationMonth}</td>
+          <td class="border px-4 py-2">${item.type}</td>
+          <td class="border px-4 py-2">${item.total}</td>
+          <td class="border px-4 py-2 ${statusClass}">${item.status}</td>
+          <td class="border px-4 py-2">${item.returnDate}</td>
+        `;
+        tableBody.appendChild(row);
+      });
+
+      entryInfo.textContent = `Showing ${start + 1} to ${Math.min(end, filteredData.length)} of ${filteredData.length} entries`;
+      renderPagination();
+    }
+
+    function renderPagination() {
+      paginationControls.innerHTML = "";
+      const entriesPerPage = parseInt(entriesSelect.value);
+      const totalPages = Math.ceil(filteredData.length / entriesPerPage);
+
+      const createBtn = (text, disabled, page) => {
+        const btn = document.createElement("button");
+        btn.textContent = text;
+        btn.className = `px-3 py-1 border ${disabled ? 'bg-gray-200 text-gray-500' : 'hover:bg-gray-300'} rounded`;
+        btn.disabled = disabled;
+        btn.addEventListener("click", () => {
+          currentPage = page;
+          renderTable();
+        });
+        return btn;
+      };
+
+      paginationControls.appendChild(createBtn("Previous", currentPage === 1, currentPage - 1));
+      for (let i = 1; i <= totalPages; i++) {
+        const btn = createBtn(i, false, i);
+        if (i === currentPage) btn.classList.add("bg-blue-500", "text-white");
+        paginationControls.appendChild(btn);
+      }
+      paginationControls.appendChild(createBtn("Next", currentPage === totalPages, currentPage + 1));
+    }
+
+    function filterData() {
+      const month = monthFilter.value;
+      const search = searchInput.value.toLowerCase();
+
+      filteredData = jsonData.filter(item => {
+        const matchesMonth = month === "All" || item.vacationMonth === month;
+        const matchesSearch =
+          item.name.toLowerCase().includes(search) ||
+          item.job.toLowerCase().includes(search);
+        return matchesMonth && matchesSearch;
+      });
+
+      currentPage = 1;
+      renderTable();
+    }
+
+    function downloadPDF() {
+      const element = document.getElementById("tableSection");
+      const opt = {
+        margin: 0.5,
+        filename: 'Vacation_Report.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+      };
+      html2pdf().set(opt).from(element).save();
+    }
+    function downloadExcel() {
+    const table = document.getElementById("vacationTable");
+    const wb = XLSX.utils.table_to_book(table, { sheet: "Vacation Data" });
+    XLSX.writeFile(wb, "Vacation_Report.xlsx");
+  }
+
+    // Event Listeners
+    monthFilter.addEventListener("change", filterData);
+    searchInput.addEventListener("input", filterData);
+    entriesSelect.addEventListener("change", () => {
+      currentPage = 1;
+      renderTable();
+    });
+
+    // Initial Render
+    filterData();
+  </script>
+</body>
+</html>

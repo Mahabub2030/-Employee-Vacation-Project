@@ -10,7 +10,12 @@
   </head>
   <body class="bg-gray-100 mt-10">
     <div class=" mx-auto p-5">
-      <h1 class="text-2xl font-bold mb-4">Vacation</h1>
+      <div class="flex text-center justify-between">
+        <!-- <img class="h-[70px]" src="./assts/Nabatatlogo.png" alt=""> -->
+        <h1 class="text-2xl font-bold mb-10 bg-[#84B941] rounded font-mono text-white p-5 text-center">Vacation Record from -4012 (KFIA)</h1>
+        
+        <img class="h-[70px] border" src="./assts/Nabatatlogo.png" alt="">
+      </div>
 
       <!-- Filter, Search, Entries, Download -->
       <div class="mb-4 grid lg:grid-cols-4 md:grid-cols-2 sm:grid-cols-1 gap-2 overflow-x-auto">
@@ -97,6 +102,9 @@
         <div class="flex gap-1" id="paginationControls"></div>
       </div>
     </div>
+    <footer class="text-center mt-10 text-sm text-gray-500 font-mono">
+      &copy; All Rights Reserved – Nabatat 4012(Mahabub)
+    </footer>
 
     <script>
       const jsonData = [
@@ -618,7 +626,7 @@
           filename: "Vacation_Report.pdf",
           image: { type: "jpeg", quality: 0.98 },
           html2canvas: { scale: 2 },
-          jsPDF: { unit: "in", format: "a4", orientation: "landscape" },
+          jsPDF: { unit: "in", format: "a3", orientation: "landscape" },
         };
         html2pdf().set(opt).from(element).save();
       }
